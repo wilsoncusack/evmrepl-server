@@ -1,16 +1,16 @@
 use alloy_primitives::{address, keccak256, Address, U256};
 use revm::{
     db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Bytecode, Bytes, TransactTo, TxEnv},
+    primitives::{AccountInfo, Bytecode, Bytes, ResultAndState, TransactTo, TxEnv},
     Evm,
 };
 
-pub fn execute_bytecode(
+pub fn execute_calldata(
     bytecode: Bytecode,
     calldata: Option<Bytes>,
     value: Option<U256>,
     caller: Option<Address>,
-) -> Result<u64, eyre::Error> {
+) -> Result<ResultAndState, eyre::Error> {
     let dummy_address = address!("1000000000000000000000000000000000000000");
     let code_hash = keccak256(&bytecode.bytes());
 
@@ -37,5 +37,5 @@ pub fn execute_bytecode(
 
     let tx_res = evm.transact()?;
 
-    Ok(tx_res.result.gas_used())
+    Ok(tx_res)
 }
