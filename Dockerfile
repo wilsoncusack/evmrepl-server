@@ -10,6 +10,8 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . .
 
+ENV ROCKET_ADDRESS=0.0.0.0
+
 # Build the Rust application
 RUN cargo build --release
 
