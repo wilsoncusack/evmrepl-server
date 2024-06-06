@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: gas-playground
+    env: docker
+    plan: starter
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: ROCKET_ADDRESS
+        value: 0.0.0.0
