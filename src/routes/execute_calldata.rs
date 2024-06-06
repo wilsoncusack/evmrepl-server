@@ -1,9 +1,6 @@
 use crate::gas::execute_calldata;
-use alloy_primitives::{
-    hex::{self, FromHex},
-    Address, U256,
-};
-use revm::primitives::{Bytecode, Bytes, ResultAndState};
+use alloy_primitives::hex;
+use revm::primitives::{Bytecode, ResultAndState};
 use rocket::{post, response::status, serde::json::Json};
 use serde::Deserialize;
 use std::str::FromStr;
