@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y curl
 
 # Download and install solc (Solidity compiler)
-RUN curl -L https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-static-linux -o /usr/local/bin/solc && \
+RUN curl -L https://github.com/ethereum/solidity/releases/download/v0.8.26/solc-static-linux -o /usr/local/bin/solc && \
     chmod +x /usr/local/bin/solc
 
 # Create a new directory for the application
