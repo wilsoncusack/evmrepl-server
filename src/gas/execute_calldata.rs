@@ -1,7 +1,7 @@
 use alloy_primitives::{address, keccak256, Address, U256};
 use revm::{
     db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Bytecode, Bytes, ResultAndState, TransactTo, TxEnv},
+    primitives::{AccountInfo, Bytecode, Bytes, ExecutionResult, TransactTo, TxEnv},
     Evm,
 };
 
@@ -10,7 +10,7 @@ pub fn execute_calldata(
     calldata: Option<Bytes>,
     value: Option<U256>,
     caller: Option<Address>,
-) -> Result<ResultAndState, eyre::Error> {
+) -> Result<ExecutionResult, eyre::Error> {
     let dummy_address = address!("1000000000000000000000000000000000000000");
     let code_hash = keccak256(&bytecode.bytes());
 
@@ -35,7 +35,8 @@ pub fn execute_calldata(
 
     let mut evm = Evm::builder().with_db(db).with_tx_env(tx).build();
 
-    let tx_res = evm.transact()?;
+    let tx_res = evm.transact_commit()?;
+    println!("yo {:?}", tx_res.output());
 
     Ok(tx_res)
 }
@@ -43,15 +44,15 @@ pub fn execute_calldata(
 #[cfg(test)]
 mod test {
     use super::*;
-    use revm::primitives::ExecutionResult;
+    use revm::primitives::{ExecutionResult, Output};
 
     #[test]
     fn test_execute_calldata_with_storage_operations() {
         // Example bytecode with storage operations (SSTORE and SLOAD)
         let bytecode = Bytecode::new_raw(
             vec![
-                0x60, 0x00, // PUSH1 0x00
-                0x60, 0x01, // PUSH1 0x01
+                0x60, 0x01, // PUSH1 0x00
+                0x60, 0x00, // PUSH1 0x01
                 0x55, // SSTORE (store 1 at storage slot 0)
                 0x60, 0x00, // PUSH1 0x00
                 0x54, // SLOAD (load value at storage slot 0)
@@ -70,7 +71,7 @@ mod test {
         // Print the result and gas used
         if let ExecutionResult::Success {
             gas_used, output, ..
-        } = result.unwrap().result
+        } = result.unwrap()
         {
             println!("With storage - Gas used: {}", gas_used);
             println!("With storage - Output: {:?}", output);
@@ -102,7 +103,7 @@ mod test {
         // Print the result and gas used
         if let ExecutionResult::Success {
             gas_used, output, ..
-        } = result.unwrap().result
+        } = result.unwrap()
         {
             println!("Without storage - Gas used: {}", gas_used);
             println!("Without storage - Output: {:?}", output);

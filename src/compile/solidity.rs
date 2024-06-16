@@ -33,6 +33,8 @@ pub fn compile(code: &str) -> Result<(String, String), eyre::Error> {
         .next()
         .ok_or(eyre::eyre!("No contracts found"))?;
 
+    println!("{:?}", contract);
+
     let abi = contract
         .get("abi")
         .ok_or(eyre::eyre!("No abi in contract"))?
