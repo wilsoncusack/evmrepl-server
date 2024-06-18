@@ -46,11 +46,9 @@ mod test {
     use crate::compile;
 
     use super::*;
-    use alloy_json_abi::JsonAbi;
-    use alloy_primitives::hex::{FromHex, ToHexExt};
     use alloy_sol_types::sol;
-    use revm::primitives::ExecutionResult;
     use alloy_sol_types::SolCall;
+    use revm::primitives::ExecutionResult;
 
     #[test]
     fn test_execute_calldata_with_storage_operations() {
@@ -125,7 +123,7 @@ mod test {
 
     #[test]
     fn test_execute_solidity() {
-      let solidity_code = r#"
+        let solidity_code = r#"
             pragma solidity ^0.8.0;
             contract SimpleStorage {
                 uint256 public storedData;
@@ -142,21 +140,14 @@ mod test {
 
         let result = compile::solidity::compile(solidity_code);
         let (_, bytecode) = result.unwrap();
-        // println!("{:?}", jsonAbi);
-        // let abi: JsonAbi = serde_json::from_str(&jsonAbi).unwrap();
-        // for item in abi.items() {
-        //     println!("{item:?}");
-        // }
 
         sol! {
           function set(uint256 x) public;
         }
-  
+
         let encoded = setCall { x: U256::ZERO }.abi_encode();
         let b = Bytecode::new_raw(bytecode.into());
         let e: alloy_primitives::Bytes = encoded.into();
         println!("{:?}", execute_calldata(b, Some(e), None, None));
-        
     }
-    
 }
