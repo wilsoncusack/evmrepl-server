@@ -1,8 +1,8 @@
-use alloy_primitives::{address, keccak256, Address, U256};
+use alloy_primitives::{Address, Bytes, U256};
 use revm::{
-    db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Bytecode, Bytes, ExecutionResult, TransactTo, TxEnv},
-    Evm,
+    db::CacheDB,
+    primitives::{Bytecode, ExecutionResult, TransactTo, TxEnv},
+    Evm, InMemoryDB,
 };
 
 pub fn execute_calldata(
@@ -11,16 +11,12 @@ pub fn execute_calldata(
     value: Option<U256>,
     caller: Option<Address>,
 ) -> Result<ExecutionResult, eyre::Error> {
-    let dummy_address = address!("1000000000000000000000000000000000000000");
-    let code_hash = keccak256(&bytecode.bytes());
+    let mut db = CacheDB::new(InMemoryDB::default());
 
-    let account = AccountInfo::new(U256::ZERO, 0, code_hash, bytecode.into());
-
-    let mut db = CacheDB::new(EmptyDB::default());
-    db.insert_account_info(dummy_address, account);
+    let address = deploy(bytecode.bytes(), &mut db)?;
 
     let mut tx = TxEnv::default();
-    tx.transact_to = TransactTo::Call(dummy_address);
+    tx.transact_to = TransactTo::Call(address);
     if let Some(calldata) = calldata {
         tx.data = calldata;
     }
@@ -40,12 +36,33 @@ pub fn execute_calldata(
     Ok(tx_res)
 }
 
+fn deploy(bytecode: Bytes, db: &mut CacheDB<InMemoryDB>) -> Result<Address, eyre::Error> {
+    let mut evm = Evm::builder()
+        .with_db(db)
+        .modify_tx_env(|tx| {
+            tx.transact_to = TransactTo::Create;
+            tx.data = bytecode;
+        })
+        .build();
+    let result = evm.transact_commit()?;
+
+    if let ExecutionResult::Success { output, .. } = result {
+        let address = output
+            .address()
+            .ok_or(eyre::eyre!("Something went wrong"))?;
+        return Ok(*address);
+    } else {
+        Err(eyre::eyre!("Execution failed {:?}", result))
+    }
+}
+
 #[cfg(test)]
 mod test {
 
     use crate::compile;
 
     use super::*;
+    use alloy_primitives::address;
     use alloy_primitives::hex;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
@@ -69,7 +86,7 @@ mod test {
 
         let calldata = Some(Bytes::from(vec![]));
         let value = Some(U256::from(0));
-        let caller = Some(address!("b000000000000000000000000000000000000000"));
+        let caller = Some(address!("0000000000000000000000000000000000000000"));
 
         let result = execute_calldata(bytecode, calldata, value, caller);
 
