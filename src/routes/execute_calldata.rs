@@ -1,6 +1,6 @@
 use crate::gas::execute_calldata;
 use alloy_primitives::hex;
-use revm::primitives::{Bytecode, ResultAndState};
+use revm::primitives::{Bytecode, ExecutionResult};
 use rocket::{post, response::status, serde::json::Json};
 use serde::Deserialize;
 use std::str::FromStr;
@@ -16,12 +16,12 @@ pub struct ExecuteCalldataRequest {
 #[post("/execute_calldata", format = "json", data = "<req>")]
 pub fn execute_calldata_route(
     req: Json<ExecuteCalldataRequest>,
-) -> Result<Json<ResultAndState>, status::BadRequest<Option<String>>> {
+) -> Result<Json<ExecutionResult>, status::BadRequest<Option<String>>> {
     let result = handle(req).map_err(|err| status::BadRequest(Some(err.to_string())))?;
     Ok(Json(result))
 }
 
-fn handle(req: Json<ExecuteCalldataRequest>) -> Result<ResultAndState, eyre::Error> {
+fn handle(req: Json<ExecuteCalldataRequest>) -> Result<ExecutionResult, eyre::Error> {
     let bytecode = hex::decode(&req.bytecode).map_err(|err| eyre::eyre!(err.to_string()))?;
     let calldata = decode(&req.calldata)?;
     let value = decode(&req.value)?;
