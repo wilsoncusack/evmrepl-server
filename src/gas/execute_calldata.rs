@@ -46,6 +46,7 @@ mod test {
     use crate::compile;
 
     use super::*;
+    use alloy_primitives::hex;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
     use revm::primitives::ExecutionResult;
@@ -146,7 +147,7 @@ mod test {
         }
 
         let encoded = setCall { x: U256::ZERO }.abi_encode();
-        let b = Bytecode::new_raw(bytecode.into());
+        let b = Bytecode::new_raw(hex::decode(bytecode).unwrap().into());
         let e: alloy_primitives::Bytes = encoded.into();
         println!("{:?}", execute_calldata(b, Some(e), None, None));
     }
