@@ -1,4 +1,4 @@
-use gas_exp::routes::{compile_solidity_route, execute_calldata_route, execute_calldatas_route};
+use gas_exp::routes::{compile_solidity_route, execute_calldatas_route};
 use rocket_cors::{AllowedHeaders, AllowedOrigins, CorsOptions};
 
 #[macro_use]
@@ -15,7 +15,6 @@ fn rocket() -> _ {
     rocket::build().attach(cors.to_cors().unwrap()).mount(
         "/",
         routes![
-            execute_calldata_route,
             execute_calldatas_route,
             compile_solidity_route
         ],

@@ -10,9 +10,9 @@ use super::{deploy, transact};
 
 #[derive(Deserialize, Clone)]
 pub struct Call {
-    calldata: Option<Bytes>,
-    value: Option<U256>,
-    caller: Option<Address>,
+    pub calldata: Option<Bytes>,
+    pub value: Option<U256>,
+    pub caller: Option<Address>,
 }
 
 pub fn execute_calldatas(
