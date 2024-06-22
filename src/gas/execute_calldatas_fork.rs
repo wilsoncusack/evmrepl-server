@@ -59,40 +59,26 @@ mod test {
     use super::*;
     use alloy_dyn_abi::DynSolType;
     use alloy_json_abi::JsonAbi;
-    use alloy_primitives::{hex, address};
+    use alloy_primitives::{address, hex};
     use alloy_sol_types::sol;
 
     #[test]
     fn test_execute() {
         let solidity_code = r#"
             pragma solidity ^0.8.0;
-            contract SimpleStorage {
-                uint256 public storedData;
-
-                function set(uint256 x) public returns (uint) {
-                    storedData = x;
-                    return block.number;
-                }
-
-                function get() public view returns (uint256) {
-                    return storedData;
-                }
+            interface INFT {
+                function ownerOf(uint256 tokenId) external returns (address);
             }
         "#;
-
-        sol! {
-            function ownerOf(uint256 tokenId) returns (address);
-        }
 
         let result = compile::solidity::compile(solidity_code);
         let (json_abi, bytecode) = result.unwrap();
         let abi: JsonAbi = serde_json::from_str(&json_abi).unwrap();
-        let f = abi.function("set").unwrap().first().unwrap();
-        // let my_type: DynSolType = "uint256".parse().unwrap();
-        let data = hex!("0000000000000000000000000000000000000000000000000000000000000001");
+        let f = abi.function("ownerOf").unwrap().first().unwrap();
+        let data = hex!("0000000000000000000000000000000000000000000000000000000000000429");
         let args = DynSolType::Uint(256).abi_decode(&data).unwrap();
         let to = address!("cB28749c24AF4797808364D71d71539bc01E76d4");
-        let res = execute_calldatas_fork(Address::ZERO, to, ownerOf, &[args], U256::ZERO);
+        let res = execute_calldatas_fork(Address::ZERO, to, f, &[args], U256::ZERO);
         println!("{:?}", res.err());
     }
 }
