@@ -1,5 +1,5 @@
 use super::Call;
-use alloy::providers::ProviderBuilder;
+use alloy::providers::{Provider, ProviderBuilder};
 use alloy_dyn_abi::DynSolValue;
 use alloy_eips::BlockId;
 use alloy_json_abi::Function;
@@ -33,6 +33,15 @@ pub async fn execute_calldatas_fork(
     args: &[DynSolValue],
     value: U256,
 ) -> Result<CallResult, eyre::Error> {
+    let rpc_url = "https://mainnet.base.org".parse()?;
+
+    // Create a provider with the HTTP transport using the `reqwest` crate.
+    let provider = ProviderBuilder::new().on_http(rpc_url);
+
+    // Get latest block number.
+    let latest_block_number = provider.get_block_number().await?;
+    let latest_block = provider.get_block(id, kind)
+
     let cfg = CfgEnv::default().with_chain_id(8453);
     let block = BlockEnv {
         number: U256::from_str("1234").unwrap(),
