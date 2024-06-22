@@ -14,9 +14,6 @@ fn rocket() -> _ {
 
     rocket::build().attach(cors.to_cors().unwrap()).mount(
         "/",
-        routes![
-            execute_calldatas_route,
-            compile_solidity_route
-        ],
+        routes![execute_calldatas_route, compile_solidity_route],
     )
 }
