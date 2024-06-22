@@ -25,5 +25,5 @@ alloy-eips = "0.1.2"
 alloy-network = "0.1.2"
 alloy-transport-http = "0.1.2"
 forge = {git = "https://github.com/foundry-rs/foundry.git", package = "forge"}
-foundry-config = "0.2.0"
+foundry-config = {git = "https://github.com/foundry-rs/foundry.git", package = "foundry-config"}
 alloy-dyn-abi = "0.7.6"

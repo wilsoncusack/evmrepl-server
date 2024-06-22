@@ -13,33 +13,41 @@ use forge::{
     inspectors::InspectorStack,
     opts::EvmOpts,
 };
-use foundry_config::{
-    ethers_solc::{artifacts::bytecode, EvmVersion},
-    find_project_root_path, Config,
-};
+use foundry_config::Config;
+// use forge::config::{
+//     ethers_solc::{artifacts::{bytecode, Evm}, EvmVersion},
+//     find_project_root_path, Config,
+// };
 use revm::{
     db::CacheDB,
     primitives::{Bytecode, ExecutionResult, TransactTo, TxEnv},
-    Evm, InMemoryDB, Inspector,
+    InMemoryDB, Inspector,
 };
 use revm_primitives::{CfgEnv, Env, EnvWithHandlerCfg, SpecId};
 use std::{str::FromStr, sync::Arc};
 
-pub fn execute_calldatas_fork(
+pub async fn execute_calldatas_fork(
     bytecode: Bytes,
     from: Address,
     func: &Function,
     args: &[DynSolValue],
     value: U256,
 ) -> Result<CallResult, eyre::Error> {
+    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(RpcOpts);
+    // let evm_opts = figment.extract::<EvmOpts>()?;
+    // let mut config = Config::try_from(figment)?.sanitized();
+    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(eth.rpc);
+    // let evm_opts = figment.extract::<EvmOpts>()?;
+
+    // let (env, fork, chain) = TracingExecutor::get_fork_material(&config, evm_opts).await?;
+
     let env = EnvWithHandlerCfg::new_with_spec_id(Box::default(), SpecId::LATEST);
-    let (m, _) = MultiFork::new();
-    let b = backend::Backend::spawn(Some(CreateFork {
-        enable_caching: true,
-        url: "https://mainnet.base.org".into(),
-        env: Env::default(),
-        evm_opts: EvmOpts::default(),
-    }));
+    let opts = EvmOpts {
+        fork_url: Some("https://mainnet.base.org".into()),
+        ..Default::default()
+    };
+    let b = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));
+    // opts.get_fork(config, env);
     let mut e = executors::Executor::new(
         b,
         env,
@@ -64,8 +72,8 @@ mod test {
     use alloy_primitives::{address, hex};
     use alloy_sol_types::sol;
 
-    #[test]
-    fn test_execute() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_execute() {
         let solidity_code = r#"
             pragma solidity ^0.8.0;
             contract Test {
@@ -83,9 +91,9 @@ mod test {
         let f = abi.function("test").unwrap().first().unwrap();
         let data = hex!("0000000000000000000000000000000000000000000000000000000000000429");
         let args = DynSolType::Uint(256).abi_decode(&data).unwrap();
-        let to = address!("cB28749c24AF4797808364D71d71539bc01E76d4");
+        // let to = address!("cB28749c24AF4797808364D71d71539bc01E76d4");
         let code = Bytes::from_hex(bytecode).expect("error getting bytes");
-        let res = execute_calldatas_fork(code, Address::ZERO, f, &[args], U256::ZERO);
+        let res = execute_calldatas_fork(code, Address::ZERO, f, &[args], U256::ZERO).await;
         println!("{:?}", res.unwrap().raw.out);
     }
 }
