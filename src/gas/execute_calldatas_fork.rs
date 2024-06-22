@@ -8,7 +8,7 @@ use alloy_primitives::{Address, Bytes, U256};
 use alloy_transport_http::{Client, Http};
 use forge::{
     backend,
-    executors::{self, CallResult, Executor, TracingExecutor},
+    executors::{self, CallResult, Executor, ExecutorBuilder, TracingExecutor},
     fork::{CreateFork, MultiFork},
     inspectors::InspectorStack,
     opts::EvmOpts,
@@ -23,7 +23,7 @@ use revm::{
     primitives::{Bytecode, ExecutionResult, TransactTo, TxEnv},
     InMemoryDB, Inspector,
 };
-use revm_primitives::{CfgEnv, Env, EnvWithHandlerCfg, SpecId};
+use revm_primitives::{BlockEnv, CfgEnv, Env, EnvWithHandlerCfg, SpecId};
 use std::{str::FromStr, sync::Arc};
 
 pub async fn execute_calldatas_fork(
@@ -33,24 +33,25 @@ pub async fn execute_calldatas_fork(
     args: &[DynSolValue],
     value: U256,
 ) -> Result<CallResult, eyre::Error> {
-    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(RpcOpts);
-    // let evm_opts = figment.extract::<EvmOpts>()?;
-    // let mut config = Config::try_from(figment)?.sanitized();
-    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(eth.rpc);
-    // let evm_opts = figment.extract::<EvmOpts>()?;
-
-    // let (env, fork, chain) = TracingExecutor::get_fork_material(&config, evm_opts).await?;
-
-    let env = EnvWithHandlerCfg::new_with_spec_id(Box::default(), SpecId::LATEST);
+    let cfg = CfgEnv::default().with_chain_id(8453);
+    let block = BlockEnv {
+        number: U256::from_str("1234").unwrap(),
+        ..Default::default()
+    };
+    let env = Env {
+        cfg,
+        block,
+        ..Default::default()
+    };
+    let env_with_handler = EnvWithHandlerCfg::new_with_spec_id(Box::new(env), SpecId::LATEST);
     let opts = EvmOpts {
         fork_url: Some("https://mainnet.base.org".into()),
         ..Default::default()
     };
     let b = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));
-    // opts.get_fork(config, env);
     let mut e = executors::Executor::new(
         b,
-        env,
+        env_with_handler,
         InspectorStack::default(),
         U256::from_str("2000000").unwrap(),
     );
@@ -80,7 +81,7 @@ mod test {
                 function test(uint256 tokenId) external returns (bytes memory) {
                     bytes memory c = abi.encodeWithSelector(bytes4(keccak256("ownerOf(uint256)")), tokenId);
                     (, bytes memory res) = address(0xcB28749c24AF4797808364D71d71539bc01E76d4).call(c);
-                    return res;
+                    return abi.encode(block.number);
                 }
             }
         "#;
