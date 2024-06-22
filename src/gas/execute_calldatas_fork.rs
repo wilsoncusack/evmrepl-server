@@ -31,15 +31,21 @@ pub fn execute_calldatas_fork(
 ) -> Result<CallResult, eyre::Error> {
     let env = EnvWithHandlerCfg::new_with_spec_id(Box::default(), SpecId::LATEST);
     let (m, _) = MultiFork::new();
-    let b = backend::Backend::new(
-        m,
-        Some(CreateFork {
-            enable_caching: true,
-            url: "https://mainnet.base.org".into(),
-            env: Env::default(),
-            evm_opts: EvmOpts::default(),
-        }),
-    );
+    let b = backend::Backend::spawn(Some(CreateFork {
+        enable_caching: true,
+        url: "https://mainnet.base.org".into(),
+        env: Env::default(),
+        evm_opts: EvmOpts::default(),
+    }));
+    // let b = backend::Backend::new(
+    //     m,
+    //     Some(CreateFork {
+    //         enable_caching: true,
+    //         url: "https://mainnet.base.org".into(),
+    //         env: Env::default(),
+    //         evm_opts: EvmOpts::default(),
+    //     }),
+    // );
     let e = executors::Executor::new(
         b,
         env,
@@ -87,6 +93,6 @@ mod test {
         let args = DynSolType::Uint(256).abi_decode(&data).unwrap();
         let to = address!("cB28749c24AF4797808364D71d71539bc01E76d4");
         let res = execute_calldatas_fork(Address::ZERO, to, f, &[args], U256::ZERO);
-        println!("{:?}", res.err());
+        println!("{:?}", res.unwrap().raw.out);
     }
 }
