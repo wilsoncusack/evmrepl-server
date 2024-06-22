@@ -48,6 +48,14 @@ pub fn execute_calldatas_fork(
     );
     let t = e.call(from, to, func, args, value, None)?;
 
+    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(EthereumOpts);
+    // let evm_opts = figment.extract::<EvmOpts>()?;
+    // let mut config = Config::try_from(figment)?.sanitized();
+    // let figment = Config::figment_with_root(find_project_root_path(None).unwrap()).merge(eth.rpc);
+    // let evm_opts = figment.extract::<EvmOpts>()?;
+    // let (env, fork, chain) = TracingExecutor::get_fork_material(&config, evm_opts).await?;
+    // let mut executor = TracingExecutor::new(env, fork, None, false);
+
     Ok(t)
 }
 
