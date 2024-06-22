@@ -27,3 +27,4 @@ alloy-transport-http = "0.1.2"
 forge = {git = "https://github.com/foundry-rs/foundry.git", package = "forge"}
 foundry-config = {git = "https://github.com/foundry-rs/foundry.git", package = "foundry-config"}
 alloy-dyn-abi = "0.7.6"
+alloy-rpc-types-eth = "0.1.2"

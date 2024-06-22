@@ -3579,6 +3579,7 @@ dependencies = [
  "alloy-json-abi",
  "alloy-network",
  "alloy-primitives",
+ "alloy-rpc-types-eth",
  "alloy-sol-types",
  "alloy-transport-http",
  "anyhow",
