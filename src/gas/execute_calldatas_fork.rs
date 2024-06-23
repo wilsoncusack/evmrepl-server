@@ -4,10 +4,10 @@ use alloy::providers::{Provider, ProviderBuilder};
 use alloy_eips::BlockId;
 use alloy_primitives::{Address, Bytes, Log, U256};
 use alloy_rpc_types_eth::BlockTransactionsKind;
-use forge::{backend, executors::Executor, inspectors::InspectorStack, opts::EvmOpts};
+use forge::{backend, executors::ExecutorBuilder, opts::EvmOpts};
 use foundry_config::Config;
 use revm::{interpreter::InstructionResult, primitives::TxEnv};
-use revm_primitives::{BlockEnv, CfgEnv, Env, EnvWithHandlerCfg, SpecId};
+use revm_primitives::{BlockEnv, CfgEnv, Env};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Clone)]
@@ -66,18 +66,14 @@ pub async fn execute_calldatas_fork(
         },
         ..Default::default()
     };
-    let env_with_handler = EnvWithHandlerCfg::new_with_spec_id(Box::new(env), SpecId::LATEST);
     let opts = EvmOpts {
         fork_url: Some("https://mainnet.base.org".into()),
         ..Default::default()
     };
     let backend = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));
-    let mut executor = Executor::new(
-        backend,
-        env_with_handler,
-        InspectorStack::default(),
-        U256::from(block.header.gas_limit),
-    );
+    let mut executor = ExecutorBuilder::new()
+        .inspectors(|stack| stack.trace(true).logs(true))
+        .build(env, backend);
     let res = executor.deploy(Address::ZERO, bytecode, U256::ZERO, None)?;
 
     calls
