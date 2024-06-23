@@ -3,6 +3,6 @@ pub use deploy::deploy;
 mod transact;
 use transact::transact;
 mod execute_calldatas;
+mod execute_calldatas_fork;
 pub use execute_calldatas::{execute_calldatas, Call};
-mod execute_calldata;
-pub use execute_calldata::execute_calldata;
+pub use execute_calldatas_fork::{execute_calldatas_fork, Call as ForkCall, ExecutionResult};

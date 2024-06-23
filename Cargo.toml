@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-revm = { version = "9.0.0", features = ["serde"] }
+color-eyre = { version = "0.6", features = ["track-caller"] }
+revm = { version = "10.0.0", default-features = false }
+revm-primitives = { version = "5.0.0", default-features = false }
 tokio = { version = "1.38", features = ["rt-multi-thread", "macros"] }
 anyhow = "1.0.51"
 alloy-primitives = "0.7.4"
@@ -16,6 +18,14 @@ serde_json = "1.0.117"
 rocket = { version = "0.5.1", features = ["json"]}
 tempfile = "3.10.1"
 rocket_cors = "0.6.0"
-alloy = "0.1.0"
+alloy = { version = "0.1.2", features = ["rpc-client", "providers"]}
 alloy-sol-types = "0.7.6"
 alloy-json-abi = "0.7.6"
+alloy-eips = "0.1.2"
+alloy-network = "0.1.2"
+alloy-transport-http = "0.1.2"
+forge = {git = "https://github.com/foundry-rs/foundry.git", package = "forge"}
+foundry-config = {git = "https://github.com/foundry-rs/foundry.git", package = "foundry-config"}
+alloy-dyn-abi = "0.7.6"
+alloy-rpc-types-eth = "0.1.2"
+dotenv = "0.15.0"
