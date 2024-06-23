@@ -1,3 +1,5 @@
+use std::env;
+
 use alloy::providers::{Provider, ProviderBuilder};
 use alloy_eips::BlockId;
 use alloy_primitives::{Address, Bytes, Log, U256};
@@ -29,7 +31,9 @@ pub async fn execute_calldatas_fork(
     bytecode: Bytes,
     calls: Vec<Call>,
 ) -> Result<Vec<ExecutionResult>, eyre::Error> {
-    let rpc_url = "https://mainnet.base.org".parse()?;
+    let rpc_url = env::var("BASE_RPC")
+        .map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?
+        .parse()?;
     let provider = ProviderBuilder::new().on_http(rpc_url);
     let (_fork_gas_price, rpc_chain_id, block) = tokio::try_join!(
         provider.get_gas_price(),
@@ -96,7 +100,6 @@ mod test {
     use super::*;
     use crate::compile;
     use alloy::hex::FromHex;
-    use alloy_json_abi::JsonAbi;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
 
@@ -117,9 +120,8 @@ mod test {
             function test(uint256 tokenId) external returns (bytes memory);
         }
 
-        let result = compile::solidity::compile(solidity_code);
-        let (json_abi, bytecode) = result.unwrap();
-        let abi: JsonAbi = serde_json::from_str(&json_abi).unwrap();
+        let result = compile::solidity::compile(solidity_code).unwrap();
+        let bytecode = result.first().unwrap().clone().bytecode;
         let calldata = testCall {
             tokenId: U256::from(1065),
         }
