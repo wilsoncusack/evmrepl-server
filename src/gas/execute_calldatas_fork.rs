@@ -16,6 +16,7 @@ pub struct Call {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExecutionResult {
     pub exit_reason: InstructionResult,
     pub reverted: bool,
@@ -119,14 +120,10 @@ mod test {
         let result = compile::solidity::compile(solidity_code);
         let (json_abi, bytecode) = result.unwrap();
         let abi: JsonAbi = serde_json::from_str(&json_abi).unwrap();
-        let f = abi.function("test").unwrap().first().unwrap();
-        // let data = hex!("0000000000000000000000000000000000000000000000000000000000000429");
         let calldata = testCall {
             tokenId: U256::from(1065),
         }
         .abi_encode();
-        // let args = DynSolType::Uint(256).abi_decode(&data).unwrap();
-        // let to = address!("cB28749c24AF4797808364D71d71539bc01E76d4");
         let code = Bytes::from_hex(bytecode).expect("error getting bytes");
         let res = execute_calldatas_fork(
             code,
