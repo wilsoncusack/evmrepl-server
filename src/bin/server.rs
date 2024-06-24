@@ -1,4 +1,3 @@
-use dotenv::dotenv;
 use gas_exp::routes::{
     compile_solidity_route, execute_calldatas_fork_route, execute_calldatas_route,
 };
@@ -9,7 +8,6 @@ extern crate rocket;
 
 #[launch]
 fn rocket() -> _ {
-    dotenv().ok();
     // Configure CORS options
     let cors = CorsOptions::default()
         .allowed_origins(AllowedOrigins::all())
