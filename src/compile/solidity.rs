@@ -103,7 +103,6 @@ mod tests {
         assert!(result.is_ok());
 
         let contracts = result.unwrap();
-        println!("{:?}", contracts);
         assert_eq!(contracts.len(), 2);
 
         let simple_storage = &contracts[1];

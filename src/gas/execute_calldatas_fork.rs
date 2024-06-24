@@ -1,10 +1,11 @@
+use dotenv::dotenv;
 use std::env;
 
 use alloy::providers::{Provider, ProviderBuilder};
 use alloy_eips::BlockId;
 use alloy_primitives::{Address, Bytes, Log, U256};
 use alloy_rpc_types_eth::BlockTransactionsKind;
-use forge::{backend, executors::ExecutorBuilder, opts::EvmOpts};
+use forge::{backend, executors::ExecutorBuilder, opts::EvmOpts, traces::CallTraceArena};
 use foundry_config::Config;
 use revm::{interpreter::InstructionResult, primitives::TxEnv};
 use revm_primitives::{BlockEnv, CfgEnv, Env};
@@ -17,7 +18,7 @@ pub struct Call {
     pub caller: Address,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionResult {
     pub exit_reason: InstructionResult,
@@ -25,12 +26,14 @@ pub struct ExecutionResult {
     pub result: Bytes,
     pub gas_used: u64,
     pub logs: Vec<Log>,
+    pub traces: CallTraceArena,
 }
 
 pub async fn execute_calldatas_fork(
     bytecode: Bytes,
     calls: Vec<Call>,
 ) -> Result<Vec<ExecutionResult>, eyre::Error> {
+    dotenv().ok();
     let rpc_url = env::var("BASE_RPC")
         .map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?
         .parse()?;
@@ -86,6 +89,7 @@ pub async fn execute_calldatas_fork(
                 result: r.result,
                 gas_used: r.gas_used,
                 logs: r.logs,
+                traces: r.traces.unwrap_or(CallTraceArena::default()),
             })
         })
         .collect()
@@ -98,6 +102,7 @@ mod test {
     use alloy::hex::FromHex;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
+    use revm_primitives::address;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_execute() {
@@ -113,25 +118,25 @@ mod test {
         "#;
 
         sol! {
-            function test(uint256 tokenId) external returns (bytes memory);
+            function test(uint tokenId) external returns (bytes memory);
         }
 
         let result = compile::solidity::compile(solidity_code).unwrap();
         let bytecode = result.first().unwrap().clone().bytecode;
         let calldata = testCall {
-            tokenId: U256::from(1065),
+            tokenId: U256::from(1),
         }
         .abi_encode();
         let code = Bytes::from_hex(bytecode).expect("error getting bytes");
         let res = execute_calldatas_fork(
             code,
             vec![Call {
-                caller: Address::ZERO,
+                caller: address!("881475210E75b814D5b711090a064942b6f30605"),
                 calldata: calldata.into(),
                 value: U256::ZERO,
             }],
         )
         .await;
-        println!("{:?}", res.unwrap().first().unwrap().result);
+        println!("{:?}", res.unwrap().first().unwrap());
     }
 }
