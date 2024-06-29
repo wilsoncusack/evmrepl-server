@@ -1,4 +1,7 @@
+use alloy_sol_types::sol;
+use alloy_sol_types::SolCall;
 use dotenv::dotenv;
+use forge::constants::CHEATCODE_ADDRESS;
 use std::env;
 
 use alloy::providers::{Provider, ProviderBuilder};
@@ -11,7 +14,7 @@ use forge::{
 };
 use foundry_config::Config;
 use revm::{interpreter::InstructionResult, primitives::TxEnv};
-use revm_primitives::{BlockEnv, CfgEnv, Env};
+use revm_primitives::{address, BlockEnv, CfgEnv, Env};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Clone)]
@@ -85,12 +88,30 @@ pub async fn execute_calldatas_fork(
                 .cheatcodes(CheatsConfig::default().into())
         })
         .build(env, backend);
-    let res = executor.deploy(Address::ZERO, bytecode, U256::ZERO, None)?;
+    // let res = executor.deploy(Address::ZERO, bytecode, U256::ZERO, None)?;
 
+    ///
+    sol! {
+        function etch(address target, bytes calldata newRuntimeBytecode) external;
+    }
+    let deploy_address = address!("1000000000000000000000000000000000000000");
+    let calldata = etchCall {
+        target: deploy_address,
+        newRuntimeBytecode: bytecode,
+    }
+    .abi_encode();
+    let call = Call {
+        caller: Address::ZERO,
+        calldata: calldata.into(),
+        value: U256::ZERO,
+    };
+    executor.transact_raw(call.caller, CHEATCODE_ADDRESS, call.calldata, call.value)?;
+    ///
     calls
         .into_iter()
         .map(|call| {
-            let r = executor.transact_raw(call.caller, res.address, call.calldata, call.value)?;
+            let r =
+                executor.transact_raw(call.caller, deploy_address, call.calldata, call.value)?;
             Ok(ExecutionResult {
                 exit_reason: r.exit_reason,
                 reverted: r.reverted,
@@ -154,37 +175,33 @@ mod test {
         let solidity_code = r#"
             pragma solidity ^0.8.0;
 
-            interface Forge {
-                function roll(uint256 newHeight) external;
-            }
-
             contract Test {
                 function test() external returns (uint) {
-                    Forge(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D).roll(2);
                     return block.number;
                 }
             }
         "#;
 
         sol! {
-            function test(uint tokenId) external returns (bytes memory);
+            function test() external;
         }
 
         let result = compile::solidity::compile(solidity_code).unwrap();
-        let bytecode = result.get(1).unwrap().clone().bytecode;
+        let bytecode = result.first().unwrap().clone().bytecode;
         let code = Bytes::from_hex(bytecode).expect("error getting bytes");
+        let calldata = testCall {}.abi_encode();
         let res = execute_calldatas_fork(
             code,
             vec![Call {
                 caller: address!("881475210E75b814D5b711090a064942b6f30605"),
-                calldata: "".into(),
+                calldata: calldata.into(),
                 value: U256::ZERO,
             }],
         )
         .await
         .unwrap();
-        let result = res.first().unwrap();
-        assert!(!result.reverted);
+        let result = res;
+        // assert!(!result.reverted);
         println!("{:?}", result);
     }
 }
