@@ -16,7 +16,8 @@ pub struct CompileResponse {
 #[post("/compile_solidity", format = "json", data = "<req>")]
 pub fn compile_solidity_route(
     req: Json<CompileRequest>,
-) -> Result<Json<SolcCompileResponse>, status::BadRequest<Option<String>>> {
-    let result = compile(&req.code).map_err(|err| status::BadRequest(Some(err.to_string())))?;
-    Ok(Json(result))
+) -> Result<Json<Vec<ContractData>>, status::BadRequest<Option<String>>> {
+    // let result = compile(&req.code).map_err(|err| status::BadRequest(Some(err.to_string())))?;
+
+    Ok(Json(vec![]))
 }

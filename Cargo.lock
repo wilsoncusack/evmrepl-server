@@ -2771,7 +2771,7 @@ dependencies = [
  "foundry-block-explorers",
  "foundry-cli",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-debugger",
  "foundry-evm",
@@ -2820,7 +2820,7 @@ dependencies = [
  "derive_more",
  "eyre",
  "forge-fmt",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "itertools 0.13.0",
  "mdbook",
@@ -2875,7 +2875,7 @@ dependencies = [
  "foundry-cheatcodes",
  "foundry-cli",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-debugger",
  "foundry-evm",
@@ -2926,7 +2926,7 @@ dependencies = [
  "foundry-block-explorers",
  "foundry-cli",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-evm",
  "futures",
@@ -2960,7 +2960,7 @@ dependencies = [
  "alloy-chains",
  "alloy-json-abi",
  "alloy-primitives",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "reqwest",
  "semver 1.0.23",
  "serde",
@@ -2989,7 +2989,7 @@ dependencies = [
  "eyre",
  "foundry-cheatcodes-spec",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-evm-core",
  "foundry-wallets",
@@ -3037,7 +3037,7 @@ dependencies = [
  "eyre",
  "forge-fmt",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-debugger",
  "foundry-evm",
@@ -3084,7 +3084,7 @@ dependencies = [
  "dunce",
  "eyre",
  "foundry-block-explorers",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-linking",
  "num-format",
@@ -3115,8 +3115,8 @@ dependencies = [
  "derivative",
  "dirs 5.0.1",
  "dyn-clone",
- "foundry-compilers-artifacts",
- "foundry-compilers-core",
+ "foundry-compilers-artifacts 0.8.0",
+ "foundry-compilers-core 0.8.0",
  "futures-util",
  "home",
  "itertools 0.13.0",
@@ -3139,13 +3139,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-compilers"
+version = "0.9.0"
+source = "git+https://github.com/foundry-rs/compilers#a21275dc8df3514e8b076841a748cecbad60aac2"
+dependencies = [
+ "alloy-json-abi",
+ "alloy-primitives",
+ "auto_impl",
+ "derivative",
+ "dirs 5.0.1",
+ "dyn-clone",
+ "foundry-compilers-artifacts 0.9.0",
+ "foundry-compilers-core 0.9.0",
+ "home",
+ "itertools 0.13.0",
+ "md-5",
+ "path-slash",
+ "rayon",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "solang-parser",
+ "svm-rs",
+ "thiserror",
+ "tracing",
+ "winnow 0.6.13",
+ "yansi",
+]
+
+[[package]]
 name = "foundry-compilers-artifacts"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5795278ec3d726eb4ec932ea452a05c880780fbb677aef06f5eeab3d0e2ae075"
 dependencies = [
- "foundry-compilers-artifacts-solc",
- "foundry-compilers-artifacts-vyper",
+ "foundry-compilers-artifacts-solc 0.8.0",
+ "foundry-compilers-artifacts-vyper 0.8.0",
+]
+
+[[package]]
+name = "foundry-compilers-artifacts"
+version = "0.9.0"
+source = "git+https://github.com/foundry-rs/compilers#a21275dc8df3514e8b076841a748cecbad60aac2"
+dependencies = [
+ "foundry-compilers-artifacts-solc 0.9.0",
+ "foundry-compilers-artifacts-vyper 0.9.0",
 ]
 
 [[package]]
@@ -3156,7 +3194,7 @@ checksum = "93f19355ab89cd2b782c6d791d7cb16b7733074a7945443668183e7c258d007a"
 dependencies = [
  "alloy-json-abi",
  "alloy-primitives",
- "foundry-compilers-core",
+ "foundry-compilers-core 0.8.0",
  "futures-util",
  "md-5",
  "path-slash",
@@ -3172,6 +3210,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-compilers-artifacts-solc"
+version = "0.9.0"
+source = "git+https://github.com/foundry-rs/compilers#a21275dc8df3514e8b076841a748cecbad60aac2"
+dependencies = [
+ "alloy-json-abi",
+ "alloy-primitives",
+ "foundry-compilers-core 0.9.0",
+ "md-5",
+ "path-slash",
+ "rayon",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "walkdir",
+ "yansi",
+]
+
+[[package]]
 name = "foundry-compilers-artifacts-vyper"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3179,7 +3237,20 @@ checksum = "05564ba0e04eb361e264e68d5e7d5b69e272d7d378f22c5c6a2edbe6d1cc3b58"
 dependencies = [
  "alloy-json-abi",
  "alloy-primitives",
- "foundry-compilers-artifacts-solc",
+ "foundry-compilers-artifacts-solc 0.8.0",
+ "path-slash",
+ "serde",
+]
+
+[[package]]
+name = "foundry-compilers-artifacts-vyper"
+version = "0.9.0"
+source = "git+https://github.com/foundry-rs/compilers#a21275dc8df3514e8b076841a748cecbad60aac2"
+dependencies = [
+ "alloy-json-abi",
+ "alloy-primitives",
+ "foundry-compilers-artifacts-solc 0.9.0",
+ "foundry-compilers-core 0.9.0",
  "path-slash",
  "serde",
 ]
@@ -3207,6 +3278,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-compilers-core"
+version = "0.9.0"
+source = "git+https://github.com/foundry-rs/compilers#a21275dc8df3514e8b076841a748cecbad60aac2"
+dependencies = [
+ "alloy-primitives",
+ "cfg-if",
+ "dunce",
+ "memmap2 0.9.4",
+ "once_cell",
+ "path-slash",
+ "regex",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
 name = "foundry-config"
 version = "0.2.0"
 source = "git+https://github.com/foundry-rs/foundry.git#90da4d2b6e3f9b0e5145afc5c4c8aba08e5755da"
@@ -3219,7 +3309,7 @@ dependencies = [
  "eyre",
  "figment",
  "foundry-block-explorers",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "glob",
  "globset",
  "number_prefix",
@@ -3249,7 +3339,7 @@ dependencies = [
  "crossterm",
  "eyre",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-evm-core",
  "foundry-evm-traces",
  "ratatui",
@@ -3271,7 +3361,7 @@ dependencies = [
  "eyre",
  "foundry-cheatcodes",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-evm-core",
  "foundry-evm-coverage",
@@ -3332,7 +3422,7 @@ dependencies = [
  "alloy-primitives",
  "eyre",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-evm-core",
  "rayon",
  "revm",
@@ -3352,7 +3442,7 @@ dependencies = [
  "alloy-primitives",
  "eyre",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-evm-core",
  "foundry-evm-coverage",
@@ -3381,7 +3471,7 @@ dependencies = [
  "eyre",
  "foundry-block-explorers",
  "foundry-common",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "foundry-config",
  "foundry-evm-core",
  "futures",
@@ -3402,7 +3492,7 @@ version = "0.2.0"
 source = "git+https://github.com/foundry-rs/foundry.git#90da4d2b6e3f9b0e5145afc5c4c8aba08e5755da"
 dependencies = [
  "alloy-primitives",
- "foundry-compilers",
+ "foundry-compilers 0.8.0",
  "semver 1.0.23",
  "thiserror",
 ]
@@ -3593,12 +3683,14 @@ dependencies = [
  "dotenv",
  "eyre",
  "forge",
+ "foundry-compilers 0.9.0",
  "foundry-config",
  "regex",
  "revm",
  "revm-primitives",
  "rocket",
  "rocket_cors",
+ "semver 1.0.23",
  "serde",
  "serde_json",
  "tempfile",

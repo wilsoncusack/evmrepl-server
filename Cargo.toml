@@ -30,3 +30,5 @@ alloy-dyn-abi = "0.7.6"
 alloy-rpc-types-eth = "0.1.2"
 dotenv = "0.15.0"
 regex = "1.10.5"
+foundry-compilers = { git = "https://github.com/foundry-rs/compilers" }
+semver = "1.0.23"
