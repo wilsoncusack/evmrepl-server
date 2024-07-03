@@ -44,14 +44,12 @@ pub fn compile(code: &str) -> Result<SolcCompileResponse, eyre::Error> {
     let mut temp_file = NamedTempFile::new()?;
     temp_file.write_all(code.as_bytes())?;
 
-    println!("1");
     // Compile the Solidity code using solc
     let output = Command::new("solc")
         .arg("--combined-json")
         .arg("bin,abi")
         .arg(temp_file.path())
         .output()?;
-    println!("2");
 
     if !output.status.success() {
         return Err(eyre::eyre!(format!(
@@ -111,7 +109,6 @@ fn parse_solc_out(stdout: Vec<u8>) -> Result<Vec<ContractData>, eyre::Error> {
 }
 
 fn parse_solc_errors(stderr: &str) -> Vec<SolcError> {
-    println!("stderr:{:?}", stderr);
     let error_regex = Regex::new(r"(?m)^(Warning|Error): (.+)$").unwrap();
     let details_regex = Regex::new(r"(?ms)--> (.+?):(\d+):(\d+):\n((?:.|\n)*?)\n\n").unwrap();
 
