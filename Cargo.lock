@@ -3594,6 +3594,7 @@ dependencies = [
  "eyre",
  "forge",
  "foundry-config",
+ "regex",
  "revm",
  "revm-primitives",
  "rocket",
