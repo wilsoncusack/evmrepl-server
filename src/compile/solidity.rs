@@ -51,13 +51,14 @@ pub fn compile(code: &str) -> Result<SolcCompileResponse, eyre::Error> {
         .arg(temp_file.path())
         .output()?;
 
+    println!("output {:?}", output);
+    
     if !output.status.success() {
         return Err(eyre::eyre!(format!(
             "solc failed: {}",
             String::from_utf8_lossy(&output.stderr)
         )));
     }
-    println!("output {:?}", output);
 
     Ok(SolcCompileResponse {
         data: parse_solc_out(output.stdout)?,
