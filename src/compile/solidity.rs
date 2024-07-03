@@ -52,13 +52,13 @@ pub fn compile(code: &str) -> Result<SolcCompileResponse, eyre::Error> {
         .output()?;
 
     println!("output {:?}", output);
-    
-    if !output.status.success() {
-        return Err(eyre::eyre!(format!(
-            "solc failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        )));
-    }
+
+    // if !output.status.success() {
+    //     return Err(eyre::eyre!(format!(
+    //         "solc failed: {}",
+    //         String::from_utf8_lossy(&output.stderr)
+    //     )));
+    // }
 
     Ok(SolcCompileResponse {
         data: parse_solc_out(output.stdout)?,
