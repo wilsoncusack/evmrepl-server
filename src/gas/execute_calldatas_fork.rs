@@ -122,7 +122,7 @@ mod test {
         }
 
         let result = compile::solidity::compile(solidity_code).unwrap();
-        let bytecode = result.first().unwrap().clone().bytecode;
+        let bytecode = result.data.first().unwrap().clone().bytecode;
         let calldata = testCall {
             tokenId: U256::from(1),
         }
