@@ -57,6 +57,7 @@ pub fn compile(code: &str) -> Result<SolcCompileResponse, eyre::Error> {
             String::from_utf8_lossy(&output.stderr)
         )));
     }
+    println!("output {:?}", output);
 
     Ok(SolcCompileResponse {
         data: parse_solc_out(output.stdout)?,
