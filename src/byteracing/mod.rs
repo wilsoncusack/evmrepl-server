@@ -1,2 +1,2 @@
-mod race;
-pub use race::Game;
+mod game;
+pub use game::{Game, Map, Position, RaceResult};

@@ -1,8 +1,9 @@
 use alloy_primitives::Bytes;
-use alloy_sol_types::{sol, SolCall};
+use alloy_sol_types::{sol, SolCall, SolValue};
 use eyre::eyre;
 use revm::{db::CacheDB, InMemoryDB};
 use revm_primitives::{Address, ExecutionResult};
+use serde::Serialize;
 
 use crate::gas::{deploy, transact};
 
@@ -19,7 +20,7 @@ pub struct Game {
     message: Option<String>,
 }
 
-#[derive(Clone, Debug, Copy, PartialEq)]
+#[derive(Clone, Debug, Copy, PartialEq, Serialize)]
 pub enum RaceOutcome {
     Finish,
     Crash,
@@ -27,16 +28,17 @@ pub enum RaceOutcome {
     Halt,
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Serialize)]
 pub struct Position {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 type Path = Vec<Position>;
-type Map = Vec<Vec<i64>>;
 
-#[derive(Debug)]
+pub type Map = Vec<Vec<i64>>;
+
+#[derive(Debug, Serialize)]
 pub struct RaceResult {
     pub outcome: RaceOutcome,
     pub path: Path,
@@ -52,6 +54,11 @@ sol! {
     Right
   }
 
+  struct MapPosition {
+    uint64 x;
+    uint64 y;
+  }
+
   function getNextMove(int64[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext);
 }
 
@@ -64,8 +71,13 @@ impl Game {
             cur_position: start_position,
             car_address,
             gas_used: 0,
-            path: vec![],
-            cur_context: Bytes::default(),
+            path: vec![start_position],
+            cur_context: MapPosition {
+                x: start_position.x as u64,
+                y: start_position.y as u64,
+            }
+            .abi_encode()
+            .into(),
             db,
             outcome: None,
             message: None,
@@ -107,6 +119,10 @@ impl Game {
                 self.gas_used += gas_used - gas_refunded;
                 let call_result = getNextMoveCall::abi_decode_returns(output.data(), false)?;
                 self.update_position(call_result.r#move)?;
+                // game may be over based on position
+                if self.outcome.is_some() {
+                    return Ok(());
+                }
                 self.path.push(self.cur_position);
                 self.check_game_over()?;
                 self.cur_context = call_result.nextContext;
@@ -134,27 +150,43 @@ impl Game {
     pub fn update_position(&mut self, r#move: Move) -> Result<(), eyre::Error> {
         match r#move {
             Move::Up => {
-                self.cur_position = Position {
-                    x: self.cur_position.x,
-                    y: self.cur_position.y + 1,
+                if self.cur_position.y == 0 {
+                    self.outcome = Some(RaceOutcome::Crash)
+                } else {
+                    self.cur_position = Position {
+                        x: self.cur_position.x,
+                        y: self.cur_position.y - 1,
+                    }
                 }
             }
             Move::Down => {
-                self.cur_position = Position {
-                    x: self.cur_position.x,
-                    y: self.cur_position.y - 1,
+                if self.cur_position.y == self.map.len() - 1 {
+                    self.outcome = Some(RaceOutcome::Crash)
+                } else {
+                    self.cur_position = Position {
+                        x: self.cur_position.x,
+                        y: self.cur_position.y + 1,
+                    }
                 }
             }
             Move::Left => {
-                self.cur_position = Position {
-                    x: self.cur_position.x - 1,
-                    y: self.cur_position.y,
+                if self.cur_position.x == 0 {
+                    self.outcome = Some(RaceOutcome::Crash)
+                } else {
+                    self.cur_position = Position {
+                        x: self.cur_position.x - 1,
+                        y: self.cur_position.y,
+                    }
                 }
             }
             Move::Right => {
-                self.cur_position = Position {
-                    x: self.cur_position.x + 1,
-                    y: self.cur_position.y,
+                if self.cur_position.x == self.map[0].len() - 1 {
+                    self.outcome = Some(RaceOutcome::Crash)
+                } else {
+                    self.cur_position = Position {
+                        x: self.cur_position.x + 1,
+                        y: self.cur_position.y,
+                    }
                 }
             }
             Move::__Invalid => return Err(eyre!("Invalid move")),
@@ -163,11 +195,11 @@ impl Game {
     }
 
     pub fn check_game_over(&mut self) -> Result<(), eyre::Error> {
-        if self.cur_position.x >= self.map.len() || self.cur_position.y >= self.map[0].len() {
+        if self.cur_position.y >= self.map.len() || self.cur_position.x >= self.map[0].len() {
             self.outcome = Some(RaceOutcome::Crash);
             return Ok(());
         } else {
-            let val = self.map[self.cur_position.x][self.cur_position.y];
+            let val = self.map[self.cur_position.y][self.cur_position.x];
 
             match val {
                 0 => {}                                         // continue reacing
@@ -189,7 +221,7 @@ mod tests {
 
     fn get_car_bytecode() -> Result<Bytes, eyre::Error> {
         let solidity_code = r#"
-        pragma solidity ^0.8.0;
+        pragma solidity 0.8.26;
 
         contract Car {
             enum Move { Up, Down, Left, Right }
@@ -206,6 +238,7 @@ mod tests {
 
         let compile_result = compile(solidity_code)?;
         let bytecode = compile_result.data[0].bytecode.clone();
+        println!("bytecode {:?}", bytecode);
         Ok(Bytes::from_hex(bytecode).expect("error with bytecode"))
     }
 
