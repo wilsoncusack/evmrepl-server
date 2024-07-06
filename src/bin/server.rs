@@ -1,5 +1,5 @@
 use gas_exp::routes::{
-    compile_solidity_route, execute_calldatas_fork_route, execute_calldatas_route,
+    byterace_route, compile_solidity_route, execute_calldatas_fork_route, execute_calldatas_route,
 };
 use rocket_cors::{AllowedHeaders, AllowedOrigins, CorsOptions};
 
@@ -19,7 +19,8 @@ fn rocket() -> _ {
         routes![
             execute_calldatas_route,
             compile_solidity_route,
-            execute_calldatas_fork_route
+            execute_calldatas_fork_route,
+            byterace_route
         ],
     )
 }

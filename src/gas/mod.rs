@@ -1,7 +1,7 @@
 mod deploy;
 pub use deploy::deploy;
 mod transact;
-use transact::transact;
+pub use transact::transact;
 mod execute_calldatas;
 mod execute_calldatas_fork;
 pub use execute_calldatas::{execute_calldatas, Call};

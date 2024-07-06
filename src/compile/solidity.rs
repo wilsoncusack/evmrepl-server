@@ -51,15 +51,6 @@ pub fn compile(code: &str) -> Result<SolcCompileResponse, eyre::Error> {
         .arg(temp_file.path())
         .output()?;
 
-    println!("output {:?}", output);
-
-    // if !output.status.success() {
-    //     return Err(eyre::eyre!(format!(
-    //         "solc failed: {}",
-    //         String::from_utf8_lossy(&output.stderr)
-    //     )));
-    // }
-
     Ok(SolcCompileResponse {
         data: parse_solc_out(output.stdout)?,
         errors: parse_solc_errors(&String::from_utf8_lossy(&output.stderr).to_string()),
@@ -241,6 +232,6 @@ mod tests {
         "#;
 
         let result = compile(invalid_solidity_code);
-        assert!(result.is_err());
+        assert!(result.unwrap().errors.len() > 0);
     }
 }
