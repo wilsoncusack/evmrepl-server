@@ -26,6 +26,7 @@ pub enum RaceOutcome {
     Crash,
     Revert,
     Halt,
+    MaxGas,
 }
 
 #[derive(Clone, Debug, Copy, Serialize)]
@@ -36,7 +37,7 @@ pub struct Position {
 
 type Path = Vec<Position>;
 
-pub type Map = Vec<Vec<i64>>;
+pub type Map = Vec<Vec<i8>>;
 
 #[derive(Debug, Serialize)]
 pub struct RaceResult {
@@ -59,7 +60,7 @@ sol! {
     uint64 y;
   }
 
-  function getNextMove(int64[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext);
+  function getNextMove(int8[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext);
 }
 
 impl Game {
@@ -86,6 +87,7 @@ impl Game {
 
     pub fn run(mut self) -> Result<RaceResult, eyre::Error> {
         while self.outcome.is_none() {
+            println!("top of run loop");
             let result = self.do_move()?;
             self.handle_result(result)?;
         }
@@ -101,11 +103,13 @@ impl Game {
     pub fn handle_result(&mut self, result: ExecutionResult) -> Result<(), eyre::Error> {
         match result {
             ExecutionResult::Halt { reason, gas_used } => {
+                println!("result halt");
                 self.gas_used += gas_used;
                 self.message = Some(format!("{:?}", reason));
                 self.outcome = Some(RaceOutcome::Halt);
             }
             ExecutionResult::Revert { gas_used, output } => {
+                println!("result revert");
                 self.gas_used += gas_used;
                 self.message = Some(output.to_string());
                 self.outcome = Some(RaceOutcome::Revert);
@@ -116,10 +120,16 @@ impl Game {
                 output,
                 ..
             } => {
+                println!("result success");
                 self.gas_used += gas_used - gas_refunded;
+                if self.gas_used > 2_000_000 {
+                    self.outcome = Some(RaceOutcome::MaxGas);
+                    self.message = Some("Max gas 2M".to_string());
+                }
                 let call_result = getNextMoveCall::abi_decode_returns(output.data(), false)?;
                 self.update_position(call_result.r#move)?;
-                // game may be over based on position
+                // game may be over based on position, out of bounds
+                // and we don't want to add current position again
                 if self.outcome.is_some() {
                     return Ok(());
                 }
