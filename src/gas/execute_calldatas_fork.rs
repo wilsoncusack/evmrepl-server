@@ -99,7 +99,6 @@ pub async fn execute_calldatas_fork(
 mod test {
     use super::*;
     use crate::compile;
-    use alloy::hex::FromHex;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
     use revm_primitives::address;
@@ -122,14 +121,13 @@ mod test {
         }
 
         let result = compile::solidity::compile(solidity_code).unwrap();
-        // println!("{:?}", result.contracts.into_contracts().collect::<Vec<(String, Contract)>>().first().unwrap().1.evm.unwrap().bytecode);
         let contract = result.contracts.find_first("Test").unwrap();
         let bytecode = contract.bytecode().unwrap();
         let calldata = testCall {
             tokenId: U256::from(1),
         }
         .abi_encode();
-        let code = Bytes::from_hex(bytecode).expect("error getting bytes");
+        let code = bytecode.clone();
         let res = execute_calldatas_fork(
             code,
             vec![Call {

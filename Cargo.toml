@@ -32,4 +32,3 @@ dotenv = "0.15.0"
 regex = "1.10.5"
 foundry-compilers = { version = "0.10.1", default-features = false }
 semver = "1.0.23"
-foundry-compilers-artifacts-solc = "0.10.1"
