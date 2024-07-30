@@ -34,9 +34,9 @@ pub async fn execute_calldatas_fork(
     calls: Vec<Call>,
 ) -> Result<Vec<ExecutionResult>, eyre::Error> {
     dotenv().ok();
-    let rpc_url = env::var("BASE_RPC")
-        .map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?
-        .parse()?;
+    let rpc =
+        env::var("BASE_RPC").map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?;
+    let rpc_url = rpc.parse()?;
     let provider = ProviderBuilder::new().on_http(rpc_url);
     let (_fork_gas_price, rpc_chain_id, block) = tokio::try_join!(
         provider.get_gas_price(),
@@ -70,7 +70,7 @@ pub async fn execute_calldatas_fork(
         ..Default::default()
     };
     let opts = EvmOpts {
-        fork_url: Some("https://mainnet.base.org".into()),
+        fork_url: Some(rpc),
         ..Default::default()
     };
     let backend = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));

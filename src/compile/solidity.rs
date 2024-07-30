@@ -42,27 +42,6 @@ pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
         errors: output.output().errors.clone(),
         contracts: output.output().contracts.clone(),
     })
-    //     println!("Errors: {:?}", errors);
-
-    // // Print the errors
-    // for error in errors {
-    //     println!("Error: {:?}", error);
-    // }
-    //     let results: Vec<Result<ContractData, eyre::Error>> = output
-    //         .into_artifacts()
-    //         .map(|a| {
-    //             let abi = serde_json::to_string(&a.1.abi)
-    //                 .map_err(|err| eyre::eyre!("No abi for artifact {:?}: {:?}", a.0.name, err))?;
-    //             let bytecode = serde_json::to_string(&a.1.bytecode)
-    //                 .map_err(|err| eyre::eyre!("No bytecode for artifact {:?}: {:?}", a.0.name, err))?;
-    //             Ok(ContractData {
-    //                 name: a.0.name,
-    //                 abi: abi,
-    //                 bytecode: bytecode,
-    //             })
-    //         }).collect();
-
-    //     results.into_iter().collect()
 }
 
 fn parse_solc_errors(stderr: &str) -> Vec<SolcError> {
