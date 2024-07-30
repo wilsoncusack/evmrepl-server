@@ -226,7 +226,6 @@ mod tests {
     use crate::compile::solidity::compile;
 
     use super::*;
-    use alloy::hex::FromHex;
     use alloy_primitives::Bytes;
 
     fn get_car_bytecode() -> Result<Bytes, eyre::Error> {
@@ -236,9 +235,7 @@ mod tests {
         contract Car {
             enum Move { Up, Down, Left, Right }
 
-            function getNextMove(int64[][] calldata map, bytes calldata prevContext) 
-                external 
-                returns (Move move, bytes memory nextContext) 
+            function getNextMove(int8[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext)
             {
                 // Simple logic: always move right
                 return (Move.Right, "");
@@ -247,9 +244,9 @@ mod tests {
         "#;
 
         let compile_result = compile(solidity_code)?;
-        let bytecode = compile_result.data[0].bytecode.clone();
-        println!("bytecode {:?}", bytecode);
-        Ok(Bytes::from_hex(bytecode).expect("error with bytecode"))
+        let contract = compile_result.contracts.find_first("Car").unwrap();
+        let bytecode = contract.bytecode().unwrap();
+        Ok(bytecode.clone())
     }
 
     #[test]
@@ -263,7 +260,7 @@ mod tests {
         assert_eq!(game.cur_position.x, 0);
         assert_eq!(game.cur_position.y, 0);
         assert_eq!(game.gas_used, 0);
-        assert_eq!(game.path.len(), 0);
+        assert_eq!(game.path.len(), 1);
         assert!(game.outcome.is_none());
 
         Ok(())

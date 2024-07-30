@@ -3908,6 +3908,7 @@ dependencies = [
  "eyre",
  "forge",
  "foundry-compilers",
+ "foundry-compilers-artifacts-solc",
  "foundry-config",
  "regex",
  "revm",
