@@ -1,55 +1,20 @@
 use foundry_compilers::{
-    multi::MultiCompiler, project, solc::{Solc, SolcCompiler}, Compiler, Project, ProjectCompileOutput, ProjectPathsConfig, SolcConfig
+    contracts::VersionedContracts, multi::MultiCompilerError, Project, ProjectPathsConfig,
 };
-use semver::{BuildMetadata, Prerelease, Version};
 use serde::Serialize;
-use std::{default, env, fs, io::Write, path::PathBuf};
-use tempfile::{self, NamedTempFile, TempDir};
+use std::fs;
+use tempfile::{self, TempDir};
 
-#[derive(Debug, Clone, Serialize)]
-pub struct SolcCompileResponse {
-    pub data: Vec<ContractData>,
-    pub errors: Vec<SolcError>,
-}
-#[derive(Debug, Clone, Serialize)]
-pub enum ErrorType {
-    Error,
-    Warning,
+#[derive(Debug, Serialize)]
+pub struct CompileResult {
+    errors: Vec<MultiCompilerError>,
+    contracts: VersionedContracts,
 }
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SolcError {
-    pub error_type: ErrorType,
-    pub message: String,
-    pub details: ErrorDetails,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ErrorDetails {
-    pub line: Option<u32>,
-    pub column: Option<u32>,
-    pub code_snippet: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct ContractData {
-    pub name: String,
-    pub abi: String,
-    pub bytecode: String,
-}
-
-#[derive(Debug)]
-pub struct CompilationError {
-    pub file: String,
-    pub message: String,
-}
-
-pub fn compile(code: &str) -> Result<ProjectCompileOutput, eyre::Error> {
+pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
     // Create a temporary directory
     let temp_dir = TempDir::new()?;
-    
+
     // Create a subdirectory for sources
     let sources_dir = temp_dir.path().join("src");
     fs::create_dir(&sources_dir)?;
@@ -60,29 +25,44 @@ pub fn compile(code: &str) -> Result<ProjectCompileOutput, eyre::Error> {
 
     println!("Solidity file written to: {:?}", file_path);
 
-    // let paths = ProjectPathsConfig::builder()
-    //     .root(sources_dir.clone())
-    //     .sources(sources_dir)
-    //     .build()?;
+    let paths = ProjectPathsConfig::builder()
+        .root(sources_dir.clone())
+        .sources(sources_dir)
+        .build()?;
 
-    let paths = ProjectPathsConfig::dapptools(sources_dir.as_path())?;
-    // let project = Project::builder().paths(paths).build(Default::default())?;
-    let project = Project::builder().paths(paths).build(MultiCompiler::new(
-        SolcCompiler::Specific(Solc::new_with_version(
-            PathBuf::new(),  // Use default solc path
-            Version {
-                major: 0,
-                minor: 8,
-                patch: 26,
-                pre: semver::Prerelease::default(),
-                build: semver::BuildMetadata::default(),
-            },
-        )),
-        None,
-    )?)?;
+    let project = Project::builder()
+        .paths(paths)
+        .ephemeral()
+        .no_artifacts()
+        .build(Default::default())?;
 
     let output = project.compile()?;
-    Ok(output)
+    // let errors = &output.output().contracts;
+    Ok(CompileResult {
+        errors: output.output().errors.clone(),
+        contracts: output.output().contracts.clone(),
+    })
+    //     println!("Errors: {:?}", errors);
+
+    // // Print the errors
+    // for error in errors {
+    //     println!("Error: {:?}", error);
+    // }
+    //     let results: Vec<Result<ContractData, eyre::Error>> = output
+    //         .into_artifacts()
+    //         .map(|a| {
+    //             let abi = serde_json::to_string(&a.1.abi)
+    //                 .map_err(|err| eyre::eyre!("No abi for artifact {:?}: {:?}", a.0.name, err))?;
+    //             let bytecode = serde_json::to_string(&a.1.bytecode)
+    //                 .map_err(|err| eyre::eyre!("No bytecode for artifact {:?}: {:?}", a.0.name, err))?;
+    //             Ok(ContractData {
+    //                 name: a.0.name,
+    //                 abi: abi,
+    //                 bytecode: bytecode,
+    //             })
+    //         }).collect();
+
+    //     results.into_iter().collect()
 }
 
 fn parse_solc_errors(stderr: &str) -> Vec<SolcError> {
@@ -160,7 +140,7 @@ mod tests {
     #[test]
     fn test_compile_valid_contracts() {
         let solidity_code = r#"
-        pragma solidity ^0.8.0;
+        pragma solidity 0.8.1;
 
         contract SimpleStorage {
             uint256 public storedData;
@@ -170,7 +150,7 @@ mod tests {
             }
 
             function get() public view returns (uint256) {
-                return storedData;
+                return storedData
             }
         }
 

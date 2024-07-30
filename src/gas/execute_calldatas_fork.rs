@@ -75,7 +75,7 @@ pub async fn execute_calldatas_fork(
     };
     let backend = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));
     let mut executor = ExecutorBuilder::new()
-        .inspectors(|stack| stack.trace(true).logs(true))
+        .inspectors(|stack| stack.trace_mode(forge::traces::TraceMode::Debug).logs(true))
         .build(env, backend);
     let res = executor.deploy(Address::ZERO, bytecode, U256::ZERO, None)?;
 
