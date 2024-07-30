@@ -23,8 +23,6 @@ pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
     let file_path = sources_dir.join("Contract.sol");
     fs::write(&file_path, code)?;
 
-    println!("Solidity file written to: {:?}", file_path);
-
     let paths = ProjectPathsConfig::builder()
         .root(sources_dir.clone())
         .sources(sources_dir)
@@ -37,7 +35,7 @@ pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
         .build(Default::default())?;
 
     let output = project.compile()?;
-    // let errors = &output.output().contracts;
+
     Ok(CompileResult {
         errors: output.output().errors.clone(),
         contracts: output.output().contracts.clone(),
