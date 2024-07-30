@@ -34,9 +34,9 @@ pub async fn execute_calldatas_fork(
     calls: Vec<Call>,
 ) -> Result<Vec<ExecutionResult>, eyre::Error> {
     dotenv().ok();
-    let rpc_url = env::var("BASE_RPC")
-        .map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?
-        .parse()?;
+    let rpc =
+        env::var("BASE_RPC").map_err(|_| eyre::eyre!("BASE_RPC environment variable not set"))?;
+    let rpc_url = rpc.parse()?;
     let provider = ProviderBuilder::new().on_http(rpc_url);
     let (_fork_gas_price, rpc_chain_id, block) = tokio::try_join!(
         provider.get_gas_price(),
@@ -70,12 +70,12 @@ pub async fn execute_calldatas_fork(
         ..Default::default()
     };
     let opts = EvmOpts {
-        fork_url: Some("https://mainnet.base.org".into()),
+        fork_url: Some(rpc),
         ..Default::default()
     };
     let backend = backend::Backend::spawn(opts.get_fork(&Config::default(), opts.evm_env().await?));
     let mut executor = ExecutorBuilder::new()
-        .inspectors(|stack| stack.trace(true).logs(true))
+        .inspectors(|stack| stack.trace_mode(forge::traces::TraceMode::Debug).logs(true))
         .build(env, backend);
     let res = executor.deploy(Address::ZERO, bytecode, U256::ZERO, None)?;
 
@@ -99,7 +99,6 @@ pub async fn execute_calldatas_fork(
 mod test {
     use super::*;
     use crate::compile;
-    use alloy::hex::FromHex;
     use alloy_sol_types::sol;
     use alloy_sol_types::SolCall;
     use revm_primitives::address;
@@ -122,12 +121,13 @@ mod test {
         }
 
         let result = compile::solidity::compile(solidity_code).unwrap();
-        let bytecode = result.data.first().unwrap().clone().bytecode;
+        let contract = result.contracts.find_first("Test").unwrap();
+        let bytecode = contract.bytecode().unwrap();
         let calldata = testCall {
             tokenId: U256::from(1),
         }
         .abi_encode();
-        let code = Bytes::from_hex(bytecode).expect("error getting bytes");
+        let code = bytecode.clone();
         let res = execute_calldatas_fork(
             code,
             vec![Call {
