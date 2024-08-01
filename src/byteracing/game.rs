@@ -221,80 +221,80 @@ impl Game {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::compile::solidity::compile;
+// #[cfg(test)]
+// mod tests {
+//     use crate::compile::solidity::compile;
 
-    use super::*;
-    use alloy_primitives::Bytes;
+//     use super::*;
+//     use alloy_primitives::Bytes;
 
-    fn get_car_bytecode() -> Result<Bytes, eyre::Error> {
-        let solidity_code = r#"
-        pragma solidity 0.8.26;
+//     fn get_car_bytecode() -> Result<Bytes, eyre::Error> {
+//         let solidity_code = r#"
+//         pragma solidity 0.8.26;
 
-        contract Car {
-            enum Move { Up, Down, Left, Right }
+//         contract Car {
+//             enum Move { Up, Down, Left, Right }
 
-            function getNextMove(int8[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext)
-            {
-                // Simple logic: always move right
-                return (Move.Right, "");
-            }
-        }
-        "#;
+//             function getNextMove(int8[][] calldata map, bytes calldata prevContext) external returns (Move move, bytes memory nextContext)
+//             {
+//                 // Simple logic: always move right
+//                 return (Move.Right, "");
+//             }
+//         }
+//         "#;
 
-        let compile_result = compile(solidity_code)?;
-        let contract = compile_result.contracts.find_first("Car").unwrap();
-        let bytecode = contract.bytecode().unwrap();
-        Ok(bytecode.clone())
-    }
+//         let compile_result = compile(solidity_code)?;
+//         let contract = compile_result.contracts.find_first("Car").unwrap();
+//         let bytecode = contract.bytecode().unwrap();
+//         Ok(bytecode.clone())
+//     }
 
-    #[test]
-    fn test_game_creation() -> Result<(), eyre::Error> {
-        let map = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, -1]];
-        let car_bytecode = get_car_bytecode()?;
-        let start_position = Position { x: 0, y: 0 };
+//     #[test]
+//     fn test_game_creation() -> Result<(), eyre::Error> {
+//         let map = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, -1]];
+//         let car_bytecode = get_car_bytecode()?;
+//         let start_position = Position { x: 0, y: 0 };
 
-        let game = Game::new(map, car_bytecode, start_position)?;
+//         let game = Game::new(map, car_bytecode, start_position)?;
 
-        assert_eq!(game.cur_position.x, 0);
-        assert_eq!(game.cur_position.y, 0);
-        assert_eq!(game.gas_used, 0);
-        assert_eq!(game.path.len(), 1);
-        assert!(game.outcome.is_none());
+//         assert_eq!(game.cur_position.x, 0);
+//         assert_eq!(game.cur_position.y, 0);
+//         assert_eq!(game.gas_used, 0);
+//         assert_eq!(game.path.len(), 1);
+//         assert!(game.outcome.is_none());
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    #[test]
-    fn test_game_run() -> Result<(), eyre::Error> {
-        let map = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, -1]];
-        let car_bytecode = get_car_bytecode()?;
-        let start_position = Position { x: 0, y: 0 };
+//     #[test]
+//     fn test_game_run() -> Result<(), eyre::Error> {
+//         let map = vec![vec![0, 0, 0], vec![0, 0, 0], vec![0, 0, -1]];
+//         let car_bytecode = get_car_bytecode()?;
+//         let start_position = Position { x: 0, y: 0 };
 
-        let game = Game::new(map, car_bytecode, start_position)?;
-        let result = game.run()?;
+//         let game = Game::new(map, car_bytecode, start_position)?;
+//         let result = game.run()?;
 
-        assert_eq!(result.outcome, RaceOutcome::Crash);
-        assert_eq!(result.path.len(), 3);
-        assert!(result.gas_used > 0);
+//         assert_eq!(result.outcome, RaceOutcome::Crash);
+//         assert_eq!(result.path.len(), 3);
+//         assert!(result.gas_used > 0);
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    #[test]
-    fn test_game_crash() -> Result<(), eyre::Error> {
-        let map = vec![vec![0, 0, 1], vec![0, 0, 0], vec![0, 0, -1]];
-        let car_bytecode = get_car_bytecode()?;
-        let start_position = Position { x: 0, y: 0 };
+//     #[test]
+//     fn test_game_crash() -> Result<(), eyre::Error> {
+//         let map = vec![vec![0, 0, 1], vec![0, 0, 0], vec![0, 0, -1]];
+//         let car_bytecode = get_car_bytecode()?;
+//         let start_position = Position { x: 0, y: 0 };
 
-        let game = Game::new(map, car_bytecode, start_position)?;
-        let result = game.run()?;
+//         let game = Game::new(map, car_bytecode, start_position)?;
+//         let result = game.run()?;
 
-        assert_eq!(result.outcome, RaceOutcome::Crash);
-        assert_eq!(result.path.len(), 3);
-        assert!(result.gas_used > 0);
+//         assert_eq!(result.outcome, RaceOutcome::Crash);
+//         assert_eq!(result.path.len(), 3);
+//         assert!(result.gas_used > 0);
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

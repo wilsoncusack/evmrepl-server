@@ -1,9 +1,15 @@
 use foundry_compilers::{
     contracts::VersionedContracts, multi::MultiCompilerError, Project, ProjectPathsConfig,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use tempfile::{self, TempDir};
+
+#[derive(Deserialize)]
+pub struct SolidityFile {
+    pub name: String,
+    pub content: String,
+}
 
 #[derive(Debug, Serialize)]
 pub struct CompileResult {
@@ -11,7 +17,7 @@ pub struct CompileResult {
     pub contracts: VersionedContracts,
 }
 
-pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
+pub fn compile(files: &[SolidityFile]) -> Result<CompileResult, eyre::Error> {
     // Create a temporary directory
     let temp_dir = TempDir::new()?;
 
@@ -19,9 +25,11 @@ pub fn compile(code: &str) -> Result<CompileResult, eyre::Error> {
     let sources_dir = temp_dir.path().join("src");
     fs::create_dir(&sources_dir)?;
 
-    // Write the Solidity code to a file in the sources directory
-    let file_path = sources_dir.join("Contract.sol");
-    fs::write(&file_path, code)?;
+    // Write each Solidity file to the sources directory
+    for file in files {
+        let file_path = sources_dir.join(&file.name);
+        fs::write(&file_path, &file.content)?;
+    }
 
     let paths = ProjectPathsConfig::builder()
         .root(sources_dir.clone())
@@ -48,46 +56,65 @@ mod tests {
 
     #[test]
     fn test_compile_valid_contracts() {
-        let solidity_code = r#"
-        pragma solidity 0.8.1;
+        let files = vec![
+            SolidityFile {
+                name: "SimpleStorage.sol".to_string(),
+                content: r#"
+            pragma solidity 0.8.2;
 
-        contract SimpleStorage {
-            uint256 public storedData;
+            import "./AnotherContract.sol";
 
-            function set(uint256 x) public {
-                storedData = x;
+            contract SimpleStorage {
+                uint256 public storedData;
+
+                function set(uint256 x) public {
+                    storedData = x;
+                }
+
+                function get() public view returns (uint256) {
+                    return storedData;
+                }
             }
+            "#
+                .to_string(),
+            },
+            SolidityFile {
+                name: "AnotherContract.sol".to_string(),
+                content: r#"
+            pragma solidity ^0.8.1;
 
-            function get() public view returns (uint256) {
-                return storedData
+            contract AnotherContract {
+                string public message;
+
+                function setMessage(string memory _message) public {
+                    message = _message;
+                }
             }
-        }
+            "#
+                .to_string(),
+            },
+        ];
 
-        contract AnotherContract {
-            string public message;
+        let result = compile(&files);
 
-            function setMessage(string memory _message) public {
-                message = _message;
-            }
-        }
-        "#;
+        // assert!(result.is_ok(), "Compilation failed: {:?}", result.err());
 
-        let result = compile(solidity_code);
-        println!("{:?}", result);
-        // assert!(result.is_ok());
+        let compile_result = result.unwrap();
 
-        // let contracts = result.unwrap();
-        // assert_eq!(contracts.len(), 2);
+        // Check if there are no errors
+        // assert!(compile_result.errors.is_empty(), "Compilation had errors: {:?}", compile_result.errors);
 
-        // let simple_storage = &contracts[1];
-        // assert!(simple_storage.name.contains("SimpleStorage"));
-        // assert!(simple_storage.abi.contains("storedData"));
-        // assert!(simple_storage.bytecode.starts_with("60"));
+        // Check if both contracts are present in the output
+        // assert!(compile_result.contracts.contains_key("SimpleStorage.sol"));
+        // assert!(compile_result.contracts.contains_key("AnotherContract.sol"));
 
-        // let another_contract = &contracts[0];
-        // assert!(another_contract.name.contains("AnotherContract"));
-        // assert!(another_contract.abi.contains("message"));
-        // assert!(another_contract.bytecode.starts_with("60"));
+        // let simple_storage = &compile_result.contracts["SimpleStorage.sol"];
+        // let another_contract = &compile_result.contracts["AnotherContract.sol"];
+
+        // assert!(simple_storage.contains_key("SimpleStorage"));
+        // assert!(another_contract.contains_key("AnotherContract"));
+
+        println!("Compilation successful: {:?}", compile_result);
     }
 
     // #[test]

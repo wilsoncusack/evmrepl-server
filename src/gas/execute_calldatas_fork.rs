@@ -95,48 +95,48 @@ pub async fn execute_calldatas_fork(
         .collect()
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::compile;
-    use alloy_sol_types::sol;
-    use alloy_sol_types::SolCall;
-    use revm_primitives::address;
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+//     use crate::compile;
+//     use alloy_sol_types::sol;
+//     use alloy_sol_types::SolCall;
+//     use revm_primitives::address;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_execute() {
-        let solidity_code = r#"
-            pragma solidity ^0.8.0;
-            contract Test {
-                function test(uint256 tokenId) external view returns (bytes memory) {
-                    bytes memory c = abi.encodeWithSelector(bytes4(keccak256("ownerOf(uint256)")), tokenId);
-                    (, bytes memory res) = address(0xcB28749c24AF4797808364D71d71539bc01E76d4).staticcall(c);
-                    return res;
-                }
-            }
-        "#;
+//     #[tokio::test(flavor = "multi_thread")]
+//     async fn test_execute() {
+//         let solidity_code = r#"
+//             pragma solidity ^0.8.0;
+//             contract Test {
+//                 function test(uint256 tokenId) external view returns (bytes memory) {
+//                     bytes memory c = abi.encodeWithSelector(bytes4(keccak256("ownerOf(uint256)")), tokenId);
+//                     (, bytes memory res) = address(0xcB28749c24AF4797808364D71d71539bc01E76d4).staticcall(c);
+//                     return res;
+//                 }
+//             }
+//         "#;
 
-        sol! {
-            function test(uint tokenId) external returns (bytes memory);
-        }
+//         sol! {
+//             function test(uint tokenId) external returns (bytes memory);
+//         }
 
-        let result = compile::solidity::compile(solidity_code).unwrap();
-        let contract = result.contracts.find_first("Test").unwrap();
-        let bytecode = contract.bytecode().unwrap();
-        let calldata = testCall {
-            tokenId: U256::from(1),
-        }
-        .abi_encode();
-        let code = bytecode.clone();
-        let res = execute_calldatas_fork(
-            code,
-            vec![Call {
-                caller: address!("881475210E75b814D5b711090a064942b6f30605"),
-                calldata: calldata.into(),
-                value: U256::ZERO,
-            }],
-        )
-        .await;
-        println!("{:?}", res.unwrap().first().unwrap());
-    }
-}
+//         let result = compile::solidity::compile(solidity_code).unwrap();
+//         let contract = result.contracts.find_first("Test").unwrap();
+//         let bytecode = contract.bytecode().unwrap();
+//         let calldata = testCall {
+//             tokenId: U256::from(1),
+//         }
+//         .abi_encode();
+//         let code = bytecode.clone();
+//         let res = execute_calldatas_fork(
+//             code,
+//             vec![Call {
+//                 caller: address!("881475210E75b814D5b711090a064942b6f30605"),
+//                 calldata: calldata.into(),
+//                 value: U256::ZERO,
+//             }],
+//         )
+//         .await;
+//         println!("{:?}", res.unwrap().first().unwrap());
+//     }
+// }

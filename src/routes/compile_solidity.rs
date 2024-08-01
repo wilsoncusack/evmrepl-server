@@ -1,17 +1,16 @@
-use crate::compile::solidity::{compile, CompileResult};
+use crate::compile::solidity::{compile, CompileResult, SolidityFile};
 use rocket::{post, response::status, serde::json::Json};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct CompileRequest {
-    pub code: String,
+    pub files: Vec<SolidityFile>,
 }
-
 #[post("/compile_solidity", format = "json", data = "<req>")]
 pub fn compile_solidity_route(
     req: Json<CompileRequest>,
-) -> Result<Json<CompileResult>, status::BadRequest<Option<String>>> {
-    let result = compile(&req.code).map_err(|err| status::BadRequest(Some(err.to_string())))?;
+) -> Result<Json<CompileResult>, status::BadRequest<String>> {
+    let result = compile(&req.files).map_err(|err| status::BadRequest(err.to_string()))?;
 
     Ok(Json(result))
 }
